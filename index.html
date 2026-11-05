@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Talk to Disha · Voice orb demo</title>
+<meta name="description" content="A live demo of an AI voice orb and chatbot for websites: Disha, a campus guide for IIT Hyderabad students.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23FFD9A8'/%3E%3Cstop offset='.45' stop-color='%23FF6A2B'/%3E%3Cstop offset='1' stop-color='%23B5185C'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='15' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="brand"><span class="mini"></span><b>Disha</b><span class="pill">Live demo</span></div>
+    <button id="sound" class="icon-btn" type="button" aria-pressed="true" aria-label="Turn voice replies off">
+      <svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      <svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>
+    </button>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <p class="kicker">AI voice orb + chatbot, live demo</p>
+      <h1>Hi, I'm Disha.</h1>
+      <p class="sub">Ask me anything about IIT Hyderabad. Tap the orb and talk, or type below.</p>
+    </section>
+
+    <section class="stage">
+      <button id="orb" class="orb idle" type="button" aria-label="Tap to talk">
+        <span class="halo h1"></span><span class="halo h2"></span>
+        <span class="core">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+        </span>
+      </button>
+      <p id="status" class="status" aria-live="polite">Tap to talk</p>
+    </section>
+
+    <section id="log" class="log" aria-live="polite" aria-label="Conversation"></section>
+    <div id="chips" class="chips" aria-label="Suggested questions"></div>
+
+    <footer class="note">
+      Student demo for the IIT Hyderabad marketing showcase, by Hari Prathap. Not an official IITH service.
+      Answers come from IITH's public pages, checked November 2026. Nothing you say or type is stored.
+    </footer>
+  </main>
+
+  <form id="ask" class="ask" autocomplete="off">
+    <button id="mic" class="mic" type="button" aria-label="Tap to talk">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+    </button>
+    <input id="q" type="text" placeholder="Type a question…" aria-label="Type a question" enterkeyhint="send">
+    <button type="submit" aria-label="Send">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </form>
+
+  <script src="knowledge.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
