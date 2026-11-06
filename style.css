@@ -128,6 +128,11 @@ h1 {
   font-size: 15.5px; font-weight: 600; line-height: 1.4; color: var(--orange-glow);
 }
 .stage[data-state="error"] .status { color: #FFB59A; }
+.timer { margin: 6px 0 0; font-size: 13px; font-weight: 500; color: var(--on-dark-2); font-variant-numeric: tabular-nums; }
+
+/* iPhones and Safari: no voice level, so the orb pulses on a steady beat during a call */
+.stage.no-level[data-state="live"] .orb-float { animation: talkpulse 1.8s ease-in-out infinite; }
+@keyframes talkpulse { 50% { transform: scale(1.04); } }
 
 .chat-cta {
   margin-top: 16px; display: inline-flex; align-items: center; gap: 9px;

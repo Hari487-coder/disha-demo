@@ -36,10 +36,18 @@ site within about 5 minutes, with no commit needed.
 - `button.js` adds an invisible call button over the glass orb, so a tap on the orb starts a real
   voice call with Disha. The phone asks for the microphone the first time.
 - `app.js` watches that button and changes the orb's state: connecting, listening, Disha speaking,
-  call ended, or an error with a nudge towards the chat.
+  call ended, or an error with a nudge towards the chat. A timer under the orb counts up to the
+  3-minute limit.
 - While Disha talks, `app.js` measures the volume of her voice and the orb swells and glows with it.
-- A call ends when the visitor taps the orb again, after 3 minutes, after 30 seconds of silence, or
-  when the phone switches to another app.
+  On iPhones and in Safari the orb pulses on a steady beat instead, because reading call audio there
+  can mute it.
+- Browsers built into some apps and QR scanners can't make calls. The page spots this and points
+  people to Chrome, Safari or the chat.
+- A call ends when the visitor taps the orb again, at 3 minutes, after 30 to 45 seconds of silence
+  (the setting is 30 seconds, and the platform may apply its 45-second minimum), or when the phone
+  switches to another app or locks.
+- To test without a phone, add `?novoice` (a browser that can't call) or `?nolevel` (the iPhone
+  behaviour) to the address.
 
 ## Privacy
 
