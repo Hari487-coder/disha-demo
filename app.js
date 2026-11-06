@@ -29,7 +29,8 @@
     unavailable: "Voice isn't available right now. Chat with Disha instead",
     insecure: "Voice needs a secure (https) page. Chat with Disha instead",
     noVoice: "This browser can't make voice calls. Open the page in Chrome or Safari, or chat with Disha",
-    noChat: "The chat bubble is in the bottom-right corner"
+    noChat: "The chat is still loading. Try again in a few seconds, or tap the orb to talk",
+    chatDown: "The chat isn't loading right now. Tap the orb to talk, or refresh the page"
   };
 
   // Voice needs the microphone and WebRTC. Browsers built into some apps and QR scanners lack them.
@@ -210,9 +211,38 @@
     return null;
   }
 
+  // The chat widget gives up for good if its settings take over 4 s to load (slow venue Wi-Fi).
+  // If it hasn't shown its launcher after 6 s, reload the widget once.
+  var chatRetried = false, chatGaveUp = false;
+  function retryChat() {
+    if (findLauncher() || chatRetried) return;
+    chatRetried = true;
+    var old = document.querySelector('script[src*="chat-widget-v2.js"]');
+    if (!old) return;
+    try { if (window.__assistableWidget && window.__assistableWidget.unmount) window.__assistableWidget.unmount(); } catch (e) { /* not mounted */ }
+    var host = document.getElementById("assistable-chat-widget");
+    if (host) host.remove();
+    try { delete window.__assistableWidget; } catch (e) { window.__assistableWidget = undefined; }
+    // The loader only imports its main module and calls mountWidget(scriptTag); do the same again.
+    fetch(old.src, { cache: "no-store" })
+      .then(function (r) { return r.text(); })
+      .then(function (code) {
+        var m = code.match(/["'](\.\/chunks\/[^"']+\.js)["']/);
+        if (!m) throw new Error("chunk not found");
+        return import(new URL(m[1], old.src).href);
+      })
+      .then(function (mod) { return mod.m || mod; })
+      .then(function (api) { api.mountWidget(old); })
+      .catch(function () { chatGaveUp = true; });
+    setTimeout(function () { if (!findLauncher()) chatGaveUp = true; }, 8000);
+  }
+  setTimeout(retryChat, 6000);
+
   chatBtn.addEventListener("click", function () {
     var launcher = findLauncher();
     if (launcher) { launcher.click(); return; }
+    if (chatGaveUp) { say(TEXT.chatDown); return; }
     say(TEXT.noChat);
+    retryChat();
   });
 })();
