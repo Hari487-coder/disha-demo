@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0C0B10">
+<meta name="description" content="Rescue the visitors: a 30 second game about websites that say hello first.">
+<title>Rescue the visitors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Loaded without blocking, so the game still starts at once on bad Wi-Fi or offline (system font fallback). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="stage" aria-label="Game area: a website with visitors walking toward the exit"></canvas>
+
+<header id="hud" class="hud hidden" aria-live="off">
+  <div class="hud-brand"><img src="orb.png" alt=""><span>Rescue the visitors</span></div>
+  <div class="hud-timer" id="timer-box"><span id="timer">30</span><small>s</small></div>
+  <div class="hud-stats">
+    <div class="stat" id="stat-greeted"><b id="greeted">0</b><span>Greeted</span></div>
+    <div class="stat stat-booked" id="stat-booked"><b id="booked">0</b><span>Booked</span></div>
+    <div class="stat stat-lost" id="stat-lost"><b id="lost">0</b><span>Lost</span></div>
+  </div>
+</header>
+
+<button id="mute" class="mute" type="button" aria-label="Mute sound" title="Mute sound">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z"/><path class="waves" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+</button>
+
+<section id="attract" class="screen attract on" aria-label="Start screen">
+  <div class="attract-main">
+    <p class="kicker"><img src="orb.png" alt="">A 30 second challenge</p>
+    <h1>Rescue the <span>visitors</span></h1>
+    <p class="lede"><strong>93 of 100</strong> website visitors leave without acting. Say hello first and book them before they go.</p>
+    <p class="slogan">Hello is the new <em>“Contact us”</em>.</p>
+    <div class="cta" role="button" tabindex="0">Tap anywhere to play</div>
+    <p class="foot">Source: Unbounce 2024 conversion benchmark, median landing page conversion 6.6%.</p>
+  </div>
+  <aside class="board-card">
+    <h2>Top 10 <small>Booked</small></h2>
+    <ol class="board" id="board-attract"></ol>
+  </aside>
+  <p class="credit">A game by Hari Prathap, Harsh Garg and Jagadeesh · Marketing showcase, IIT Hyderabad</p>
+</section>
+
+<section id="countdown" class="screen countdown" aria-hidden="true">
+  <div class="count" id="count">3</div>
+  <p class="how">Tap a visitor or drag the orb.<br><span>Say hello before they leave.</span></p>
+</section>
+
+<section id="end" class="screen end" aria-hidden="true" aria-label="Results">
+  <div class="end-main">
+    <p class="kicker"><img src="orb.png" alt="">Time’s up</p>
+    <h2 class="result">You booked <em id="r-n">0</em> of <span id="r-m">0</span> visitors <span class="pct">(<span id="r-p">0</span>%)</span></h2>
+    <div class="compare">
+      <figure><div class="dots" id="dots-you"></div><figcaption>With your orb</figcaption></figure>
+      <figure><div class="dots plain" id="dots-norm"></div><figcaption>A normal website</figcaption></figure>
+    </div>
+    <p class="norm">A normal website keeps 7 in 100.</p>
+    <p class="punch">That’s what a front desk that never sleeps does.</p>
+    <p class="foot foot-end">Source: Unbounce 2024 conversion benchmark, median landing page conversion 6.6%.</p>
+    <form id="initials-form" class="initials" autocomplete="off" hidden>
+      <label for="initials">You made the top 10. Type your initials</label>
+      <input id="initials" name="initials" maxlength="3" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="___" aria-label="Your initials, 3 letters">
+      <button type="submit">Save</button>
+    </form>
+    <p id="saved" class="saved" hidden></p>
+    <div class="actions">
+      <button id="again" class="btn-primary" type="button">Play again</button>
+      <a class="disha" href="https://hari487-coder.github.io/disha-demo/" target="_blank" rel="noopener">Talk to Disha: <b>hari487-coder.github.io/disha-demo</b></a>
+    </div>
+  </div>
+  <aside class="board-card">
+    <h2>Top 10 <small>Booked</small></h2>
+    <ol class="board" id="board-end"></ol>
+  </aside>
+  <p class="credit">A game by Hari Prathap, Harsh Garg and Jagadeesh · Marketing showcase, IIT Hyderabad</p>
+</section>
+
+<script src="game.js"></script>
+</body>
+</html>
