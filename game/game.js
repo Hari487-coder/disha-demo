@@ -892,8 +892,14 @@
   }
 
   function showEnd() {
-    mode = 'end'; endIdle = 0;
     var n = stats.booked, m = stats.spawned, p = m ? Math.round(100 * n / m) : 0;
+    if (window.CVP) {
+      // the CVP Challenge (challenge.js) takes over from here
+      mode = 'hold'; show('none');
+      window.CVP.roundOver({ booked: n, total: m, pct: p });
+      return;
+    }
+    mode = 'end'; endIdle = 0;
     el.rn.textContent = n; el.rm.textContent = m; el.rp.textContent = p;
     setDots(el.dotsYou, 0); setDots(el.dotsNorm, 0);
     setTimeout(function () { if (mode === 'end') { setDots(el.dotsYou, p); setDots(el.dotsNorm, 7); } }, 420);
@@ -1019,7 +1025,7 @@
     if (mode !== 'attract') return;
     lastPointerType = e.pointerType || 'mouse';
     e.preventDefault();
-    startCountdown();
+    if (window.CVP) window.CVP.begin(); else startCountdown();
   });
 
   el.mute.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
@@ -1045,7 +1051,10 @@
     endIdle = 0;
     var k = e.key;
     if (mode === 'attract') {
-      if (k === 'Enter' || k === ' ' || k === 'Spacebar') { e.preventDefault(); lastPointerType = 'mouse'; startCountdown(); }
+      if (k === 'Enter' || k === ' ' || k === 'Spacebar') {
+        e.preventDefault(); lastPointerType = 'mouse';
+        if (window.CVP) window.CVP.begin(); else startCountdown();
+      }
       return;
     }
     if (mode === 'end') {
@@ -1096,6 +1105,9 @@
   try { layout(); } catch (e) { needLayout = true; if (window.console) console.error(e); }
   toAttract();
   window.requestAnimationFrame(frame);
+
+  // Controls for the CVP Challenge (challenge.js)
+  window.__rescueCtl = { start: startCountdown, toAttract: toAttract, round: ROUND };
 
   // Read-only hooks for testing at the stand (no effect on play).
   window.__rescue = {

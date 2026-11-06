@@ -11,6 +11,7 @@
 <!-- Loaded without blocking, so the game still starts at once on bad Wi-Fi or offline (system font fallback). -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="challenge.css">
 </head>
 <body>
 <canvas id="stage" aria-label="Game area: a website with visitors walking toward the exit"></canvas>
@@ -31,10 +32,10 @@
 
 <section id="attract" class="screen attract on" aria-label="Start screen">
   <div class="attract-main">
-    <p class="kicker"><img src="orb.png" alt="">A 30 second challenge</p>
-    <h1>Rescue the <span>visitors</span></h1>
-    <p class="lede"><strong>93 of 100</strong> website visitors leave without acting. Say hello first and book them before they go.</p>
-    <p class="slogan">Hello is the new <em>“Contact us”</em>.</p>
+    <p class="kicker"><img src="orb.png" alt="">3 levels · about 2 minutes · win a prize</p>
+    <h1>The CVP <span>Challenge</span></h1>
+    <p class="lede"><strong>93 of 100</strong> website visitors leave unhappy. Catch their pains, rescue them, pitch the fix.</p>
+    <p class="slogan">Win all 3 levels for a <em>prize</em>.</p>
     <div class="cta" role="button" tabindex="0">Tap anywhere to play</div>
     <p class="foot">Source: Unbounce 2024 conversion benchmark, median landing page conversion 6.6%.</p>
   </div>
@@ -79,6 +80,61 @@
   <p class="credit">A game by Hari Prathap, Harsh Garg and Jagadeesh · Marketing showcase, IIT Hyderabad</p>
 </section>
 
+<div class="cv-score" id="cv-score" aria-live="off"><b id="cv-points">0</b><span>points</span></div>
+
+<section id="cv-brief" class="cv" aria-hidden="true">
+  <div class="cv-in">
+    <div class="cv-pips"><i id="cv-pip1"></i><i id="cv-pip2"></i><i id="cv-pip3"></i></div>
+    <p class="cv-level" id="cv-b-level">Level 1 of 3</p>
+    <h2 class="cv-title" id="cv-b-title"></h2>
+    <p class="cv-line" id="cv-b-line"></p>
+    <p class="cv-how" id="cv-b-how"></p>
+    <button class="cv-go" id="cv-b-go" type="button">Go!</button>
+  </div>
+</section>
+
+<section id="cv-hunt" class="cv cv-hunt" aria-hidden="true" aria-label="Catch the pains">
+  <div class="cv-hunt-top" id="cv-hunt-top">
+    <span class="cv-h-stat">😟 <b id="cv-h-caught">0 / 8</b></span>
+    <span class="cv-h-stat cv-h-timer"><b id="cv-h-time">25</b>s</span>
+    <span class="cv-h-lives" id="cv-h-lives"></span>
+  </div>
+  <div class="cv-arena" id="cv-arena"></div>
+  <p class="cv-h-toast" id="cv-h-toast" aria-live="polite"></p>
+</section>
+
+<section id="cv-pitch" class="cv" aria-hidden="true">
+  <div class="cv-in">
+    <p class="cv-level">Level 3 of 3 · Build the pitch</p>
+    <div class="cv-sentence" id="cv-p-sentence"></div>
+    <div class="cv-chips" id="cv-p-chips"></div>
+    <p class="cv-why" id="cv-p-msg" aria-live="polite"></p>
+  </div>
+</section>
+
+<section id="cv-result" class="cv" aria-hidden="true">
+  <div class="cv-in">
+    <p class="cv-r-kicker" id="cv-r-kicker">You won!</p>
+    <p class="cv-r-title" id="cv-r-title"></p>
+    <ol class="cv-levels" id="cv-r-levels"></ol>
+    <div class="cv-prize" id="cv-r-prize" hidden>
+      <p>Show this screen at the stand to claim your prize</p>
+      <p class="cv-code" id="cv-r-code">CVP-0000</p>
+      <small id="cv-r-time"></small>
+    </div>
+    <p class="cv-points">Score <b id="cv-r-points">0</b></p>
+    <p class="cv-learn" id="cv-r-learn"></p>
+    <div class="cv-actions">
+      <button class="cv-btn primary" id="cv-r-again" type="button">Play again</button>
+      <button class="cv-btn" id="cv-r-home" type="button">Back to start</button>
+      <a class="cv-btn" href="https://hari487-coder.github.io/disha-demo/" target="_blank" rel="noopener">Talk to Disha</a>
+    </div>
+  </div>
+</section>
+
+<canvas id="cv-confetti" aria-hidden="true"></canvas>
+
+<script src="challenge.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
