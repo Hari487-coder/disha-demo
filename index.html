@@ -3,61 +3,134 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Talk to Disha · Voice orb demo</title>
-<meta name="description" content="A live demo of an AI voice orb and chatbot for websites: Disha, a campus guide for IIT Hyderabad students.">
-<meta name="theme-color" content="#ffffff">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23FFD9A8'/%3E%3Cstop offset='.45' stop-color='%23FF6A2B'/%3E%3Cstop offset='1' stop-color='%23B5185C'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='15' fill='url(%23g)'/%3E%3C/svg%3E">
+<title>Talk to Disha · AI voice orb demo</title>
+<meta name="description" content="Talk to Disha, a live AI voice orb and chatbot that answers questions about IIT Hyderabad. A student demo for the IITH marketing showcase.">
+<meta name="theme-color" content="#0C0B10">
+<link rel="icon" href="avatar.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.assistable.ai" crossorigin>
+<link rel="preconnect" href="https://createassistants.com" crossorigin>
+<link rel="preconnect" href="https://botdisplay.com">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
+<link rel="preload" href="orb.webp" as="image" type="image/webp">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="bar">
-    <div class="brand"><span class="mini"></span><b>Disha</b><span class="pill">Live demo</span></div>
-    <button id="sound" class="icon-btn" type="button" aria-pressed="true" aria-label="Turn voice replies off">
-      <svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-      <svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>
-    </button>
+    <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>Disha</a>
+    <span class="pill"><span class="dot" aria-hidden="true"></span>Live demo</span>
   </header>
 
-  <main class="wrap">
-    <section class="hero">
-      <p class="kicker">AI voice orb + chatbot, live demo</p>
-      <h1>Hi, I'm Disha.</h1>
-      <p class="sub">Ask me anything about IIT Hyderabad. Tap the orb and talk, or type below.</p>
-    </section>
+  <main id="top">
+    <section class="stage" id="stage" data-state="loading" aria-labelledby="hello">
+      <p class="kicker">AI voice orb + chatbot, live</p>
+      <h1 id="hello">Hi, I'm Disha.</h1>
+      <p class="lede">Ask me anything about IIT Hyderabad. Tap the orb and talk to me.</p>
 
-    <section class="stage">
-      <button id="orb" class="orb idle" type="button" aria-label="Tap to talk">
-        <span class="halo h1"></span><span class="halo h2"></span>
-        <span class="core">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-        </span>
+      <div class="orb" id="orb">
+        <div class="orb-float">
+          <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+          <img class="orb-img" src="orb.webp" alt="" width="1200" height="1200" fetchpriority="high">
+          <span class="orb-glyph" aria-hidden="true">
+            <svg class="g-mic" viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+            <svg class="g-end" viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.996.996 0 0 1 0-1.41C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67a.996.996 0 0 1 0 1.41l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85a1 1 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+          </span>
+        </div>
+        <!-- the voice button script puts its (invisible) call button in here, over the orb -->
+        <div class="orb-hit" id="voice-orb-container"></div>
+      </div>
+
+      <p class="status" id="status" aria-live="polite">Getting Disha ready…</p>
+
+      <button class="chat-cta" id="openChat" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2zm3 5v2h10V9H7zm0 4v2h7v-2H7z"/></svg>
+        Prefer to type? Chat with Disha
       </button>
-      <p id="status" class="status" aria-live="polite">Tap to talk</p>
+
+      <div class="try">
+        <p class="try-label">Try asking</p>
+        <ul class="try-list">
+          <li>Till when is the library open tonight?</li>
+          <li>Is the hospital open right now?</li>
+          <li>Can my parents visit on Saturday?</li>
+          <li>Where do I ask about placements?</li>
+          <li>Where can I get a free coffee?</li>
+        </ul>
+      </div>
     </section>
 
-    <section id="log" class="log" aria-live="polite" aria-label="Conversation"></section>
-    <div id="chips" class="chips" aria-label="Suggested questions"></div>
+    <section class="why" aria-labelledby="why-title">
+      <div class="why-inner">
+        <p class="eyebrow">What you just tried</p>
+        <h2 id="why-title">Hello is the new “Contact us”.</h2>
+        <p class="why-lede">An AI that sits on your website like a real person. It greets every visitor, answers in seconds and books them as clients, 24x7.</p>
 
-    <footer class="note">
-      Student demo for the IIT Hyderabad marketing showcase, by Hari Prathap. Not an official IITH service.
-      Answers come from IITH's public pages, checked November 2026. Nothing you say or type is stored.
-    </footer>
+        <ol class="pairs">
+          <li class="pair">
+            <div class="pain">
+              <span class="tag"><span class="num">1</span>Pain: low engagement</span>
+              <span class="big">93 of 100</span>
+              visitors leave without acting.
+              <span class="src">Unbounce, 2024</span>
+            </div>
+            <div class="fix">
+              <span class="tag"><span class="num">1</span>Fix</span>
+              Greets every visitor first: starts the chat by voice or text, so visitors engage.
+            </div>
+          </li>
+          <li class="pair">
+            <div class="pain">
+              <span class="tag"><span class="num">2</span>Pain: weak call to action</span>
+              <span class="big">“Contact us”</span>
+              buttons and long forms get ignored.
+            </div>
+            <div class="fix">
+              <span class="tag"><span class="num">2</span>Fix</span>
+              Turns the call to action into a conversation: offers the booking at the right moment, no form to fill.
+            </div>
+          </li>
+          <li class="pair">
+            <div class="pain">
+              <span class="tag"><span class="num">3</span>Pain: slow replies</span>
+              <span class="big">42 hours</span>
+              is the average wait for a reply to a web lead.
+              <span class="src">Harvard Business Review, 2011</span>
+            </div>
+            <div class="fix">
+              <span class="tag"><span class="num">3</span>Fix</span>
+              Replies in seconds, 24x7: no lead waits 42 hours, even at 2 AM. Replying within an hour makes a lead about 7x more likely to qualify.
+              <span class="src">Harvard Business Review, 2011</span>
+            </div>
+          </li>
+        </ol>
+
+        <p class="segments">Built for <b>colleges</b>, <b>clinics</b>, <b>real-estate firms</b> and <b>local shops</b> whose websites get visitors but few enquiries.</p>
+      </div>
+    </section>
   </main>
 
-  <form id="ask" class="ask" autocomplete="off">
-    <button id="mic" class="mic" type="button" aria-label="Tap to talk">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-    </button>
-    <input id="q" type="text" placeholder="Type a question…" aria-label="Type a question" enterkeyhint="send">
-    <button type="submit" aria-label="Send">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-    </button>
-  </form>
+  <footer class="foot">
+    <p class="credit">Built by Hari Prathap, Harsh Garg and Jagadeesh for the marketing showcase, M.Tech Techno-Entrepreneurship, IIT Hyderabad.</p>
+    <p>Disha is a student demo, not an official IITH service. Her answers come from IITH's public pages, checked in November 2026.</p>
+    <p>Calls and chats are recorded and kept in the demo account that runs Disha, so the team can see how she did. She never asks for your name, number or other personal details.</p>
+  </footer>
 
-  <script src="knowledge.js"></script>
   <script src="app.js"></script>
+  <script src="https://botdisplay.com/button.js" defer
+    data-color="#FF5A1F"
+    data-theme="dark"
+    data-icon="mic"
+    data-button-text="Talk to Disha"
+    data-active-text="End call"
+    data-speaking-text="Disha is speaking"
+    data-loading-text="Connecting"
+    data-container="voice-orb-container"
+    data-assistant-id="cmw4noo6e0026l7088wso2r31"
+    data-account-id="YjwLoLvdS7bAGG4Ig4zn"></script>
+  <script src="https://createassistants.com/chat-widget-v2.js"
+    data-widget-id="cmw4okkjj005xl708cd1knq81"
+    data-api-url="https://api.assistable.ai"></script>
 </body>
 </html>

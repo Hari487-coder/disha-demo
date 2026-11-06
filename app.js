@@ -1,217 +1,171 @@
-/* Disha demo: voice orb + chatbot. Knowledge lives in knowledge.js. Nothing is stored or sent anywhere. */
+/* Disha demo.
+   The glass orb is the call button: the voice button script (botdisplay.com/button.js) puts its own
+   button inside #voice-orb-container, and style.css stretches it invisibly over the orb. This file
+   mirrors that button's state onto the orb and makes the orb react to Disha's voice. Typing goes
+   through the chat widget (createassistants.com/chat-widget-v2.js). */
 (function () {
   "use strict";
-  var K = window.DISHA;
-  var $ = function (id) { return document.getElementById(id); };
-  var orb = $("orb"), statusEl = $("status"), log = $("log"), chips = $("chips");
-  var form = $("ask"), input = $("q"), soundBtn = $("sound");
 
-  var soundOn = true;
-  var pending = null;            // booking flow state: null | "offer" | "slot"
-  var recognition = null, listening = false;
+  var stage = document.getElementById("stage");
+  var orb = document.getElementById("orb");
+  var hit = document.getElementById("voice-orb-container");
+  var statusEl = document.getElementById("status");
+  var chatBtn = document.getElementById("openChat");
 
-  /* ---------- matching ---------- */
-  function norm(s) {
-    return (" " + String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim() + " ");
-  }
-  var compiled = K.topics.map(function (t) {
-    return {
-      topic: t,
-      keys: t.keywords.map(function (k) {
-        var w = 1, m = k.match(/\^(\d+)$/);
-        if (m) { w = +m[1]; k = k.slice(0, m.index); }
-        var n = norm(k).trim();
-        return { text: n, phrase: n.indexOf(" ") > -1, weight: w };
-      })
-    };
-  });
-  function bestTopic(q) {
-    var text = norm(q), tokens = text.trim().split(" "), best = null, bestScore = 0;
-    compiled.forEach(function (c) {
-      var score = 0;
-      c.keys.forEach(function (k) {
-        var hit = k.phrase
-          ? text.indexOf(" " + k.text + " ") > -1
-          : tokens.some(function (t) { return t === k.text || (k.text.length >= 5 && t.indexOf(k.text) === 0); });
-        if (hit) score += k.phrase ? Math.max(2, k.weight) : k.weight;
-      });
-      if (score > bestScore) { bestScore = score; best = c.topic; }
-    });
-    return best;
+  var TEXT = {
+    loading: "Getting Disha ready…",
+    idle: "Tap the orb to talk",
+    connecting: "Connecting…",
+    ringing: "Calling Disha… allow the microphone if your phone asks",
+    listening: "Listening. Tap the orb to end the call",
+    speaking: "Disha is speaking",
+    ended: "Call ended. Tap the orb to talk again",
+    error: "The call didn't connect. Allow the microphone and try again, or chat instead",
+    unavailable: "Voice isn't available right now. Chat with Disha instead",
+    insecure: "Voice needs a secure (https) page. Chat with Disha instead",
+    noChat: "The chat bubble is in the bottom-right corner"
+  };
+
+  function say(t) { if (statusEl.textContent !== t) statusEl.textContent = t; }
+  function setState(s) { if (stage.dataset.state !== s) stage.dataset.state = s; }
+  function state() { return stage.dataset.state; }
+
+  /* ---------- Disha's voice level, read from the call's audio element ---------- */
+  var ctx = null, analyser = null, source = null, stream = null, buf = null;
+  var raf = 0, lvl = 0, loudSince = 0, quietSince = 0, speaking = false;
+
+  function ensureAudio() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!ctx) { try { ctx = new AC(); } catch (e) { return; } }
+    if (ctx.state === "suspended" && ctx.resume) ctx.resume().catch(function () {});
   }
 
-  /* ---------- replying ---------- */
-  function reply(q) {
-    var text = norm(q);
-    var flow = K.flows.visit;
+  function attach(s) {
+    if (!ctx) return;
+    try { if (source) source.disconnect(); } catch (e) { /* already gone */ }
+    try {
+      source = ctx.createMediaStreamSource(s);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.5;
+      source.connect(analyser); // analysed only; the call's <audio> element plays the sound
+      buf = new Uint8Array(analyser.fftSize);
+    } catch (e) { analyser = null; }
+    stream = s;
+  }
 
-    if (pending === "offer") {
-      pending = null;
-      if (/ (yes|yeah|yep|sure|ok|okay|pick|help|please|haan|ha) /.test(text)) {
-        pending = "slot";
-        return { text: flow.askSlot, chips: flow.slots.map(function (s) { return s.label; }) };
-      }
-      if (/ (no|not now|later|nah|nope) /.test(text)) return { text: flow.decline };
+  function detach() {
+    try { if (source) source.disconnect(); } catch (e) { /* already gone */ }
+    source = analyser = stream = null;
+    lvl = 0; speaking = false; loudSince = quietSince = 0;
+    orb.style.setProperty("--lvl", "0");
+  }
+
+  function tick(now) {
+    raf = requestAnimationFrame(tick);
+    var audio = document.getElementById("vb-remote-audio");
+    if (audio && audio.srcObject && audio.srcObject !== stream) attach(audio.srcObject);
+    // the button says "connected" as soon as it dials; only call it live once Disha's audio arrives
+    if (stream && state() === "connecting") { setState("live"); say(TEXT.listening); }
+
+    var target = 0;
+    if (analyser) {
+      analyser.getByteTimeDomainData(buf);
+      var sum = 0;
+      for (var i = 0; i < buf.length; i++) { var v = (buf[i] - 128) / 128; sum += v * v; }
+      target = Math.min(1, Math.sqrt(sum / buf.length) * 6);
     }
-    if (pending === "slot") {
-      var slot = null;
-      flow.slots.forEach(function (s) {
-        if (!slot && s.match.some(function (m) { return text.indexOf(" " + m + " ") > -1; })) slot = s.label;
-      });
-      pending = null;
-      if (slot) return { text: flow.confirm(slot), say: flow.confirmSay(slot), chips: ["How could a business use you?"] };
-      if (/ (no|not now|later|cancel) /.test(text)) return { text: flow.decline };
+    lvl += (target - lvl) * (target > lvl ? 0.45 : 0.12);
+    orb.style.setProperty("--lvl", lvl.toFixed(3));
+
+    // speaking or listening, with a little hysteresis so the label doesn't flicker
+    if (lvl > 0.08) {
+      quietSince = 0;
+      if (!loudSince) loudSince = now;
+      if (!speaking && now - loudSince > 120) speaking = true;
+    } else {
+      loudSince = 0;
+      if (!quietSince) quietSince = now;
+      if (speaking && now - quietSince > 600) speaking = false;
     }
+    if (state() === "live" || state() === "speaking") {
+      setState(speaking ? "speaking" : "live");
+      say(speaking ? TEXT.speaking : TEXT.listening);
+    }
+  }
+  function startLoop() { if (!raf) raf = requestAnimationFrame(tick); }
+  function stopLoop() { if (raf) cancelAnimationFrame(raf); raf = 0; detach(); }
 
-    var t = bestTopic(q);
-    if (!t) return { text: K.fallback, say: K.fallbackSay, chips: K.starters.slice(0, 3) };
-    var ans = typeof t.answer === "function" ? t.answer(new Date()) : t.answer;
-    if (t.offer) pending = "offer";
-    return { text: ans, say: t.say, chips: t.chips };
-  }
+  /* ---------- mirror the voice button's state onto the orb ---------- */
+  var inCall = false, endedTimer = 0;
 
-  /* ---------- chat log ---------- */
-  function linkify(s) {
-    var safe = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return safe
-      .replace(/([a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,})/gi, '<a href="mailto:$1">$1</a>')
-      .replace(/(\+91[\d ]{10,13}\d|\b14416\b)/g, function (m) { return '<a href="tel:' + m.replace(/\s/g, "") + '">' + m + "</a>"; })
-      .replace(/\b((?:[a-z0-9-]+\.)*iith\.ac\.in(?:\/[a-z_\/]*)?)/gi, function (m, u, off, str) {
-        if (str.charAt(off - 1) === "@" || str.charAt(off - 1) === ".") return m;
-        return '<a href="https://' + m + '" target="_blank" rel="noopener">' + m + "</a>";
-      });
-  }
-  function addMsg(who, text) {
-    var row = document.createElement("div");
-    row.className = "msg " + who;
-    var b = document.createElement("div");
-    b.className = "bubble";
-    if (who === "ai") b.innerHTML = linkify(text); else b.textContent = text;
-    row.appendChild(b);
-    log.appendChild(row);
-    document.body.classList.add("chatting");
-    row.scrollIntoView({ behavior: "smooth", block: "end" });
-  }
-  function setChips(list) {
-    chips.innerHTML = "";
-    (list || []).forEach(function (c) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "chip";
-      btn.textContent = c;
-      btn.addEventListener("click", function () { ask(c); });
-      chips.appendChild(btn);
-    });
-  }
+  function sync() {
+    var b = document.getElementById("vb-call-btn");
+    if (!b) return;
+    var c = b.classList;
 
-  /* ---------- voice out ---------- */
-  var voice = null;
-  function pickVoice() {
-    if (!("speechSynthesis" in window)) return;
-    var vs = speechSynthesis.getVoices();
-    voice =
-      vs.find(function (v) { return /en[-_]IN/i.test(v.lang) && /female|heera|veena|neerja|swara|google/i.test(v.name); }) ||
-      vs.find(function (v) { return /en[-_]IN/i.test(v.lang); }) ||
-      vs.find(function (v) { return /^en/i.test(v.lang) && /female|samantha|zira|google uk english female/i.test(v.name); }) ||
-      vs.find(function (v) { return /^en/i.test(v.lang); }) || null;
-  }
-  if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-
-  function speak(text) {
-    if (!soundOn || !("speechSynthesis" in window)) { setState("idle"); return; }
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(text);
-    if (voice) { u.voice = voice; u.lang = voice.lang; } else { u.lang = "en-IN"; }
-    u.rate = 1.02; u.pitch = 1.05;
-    u.onstart = function () { setState("speaking"); };
-    u.onend = u.onerror = function () { setState("idle"); };
-    speechSynthesis.speak(u);
-  }
-
-  /* ---------- the orb ---------- */
-  var labels = { idle: "Tap to talk", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking… tap to stop" };
-  function setState(s) {
-    orb.className = "orb " + s;
-    $("mic").classList.toggle("live", s === "listening" || s === "speaking");
-    statusEl.textContent = labels[s] || "";
-    orb.setAttribute("aria-label", labels[s] || "Tap to talk");
-  }
-
-  function ask(q) {
-    q = String(q || "").trim();
-    if (!q) return;
-    addMsg("you", q);
-    setState("thinking");
-    var r = reply(q);
-    setTimeout(function () {             // a short beat, so it feels like a person answering
-      addMsg("ai", r.text);
-      setChips(r.chips && r.chips.length ? r.chips : []);
-      speak(r.say || r.text);
-    }, 450);
-  }
-
-  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  function listen() {
-    if (!SR) {
-      statusEl.textContent = "Voice isn't available in this browser. Type your question below.";
-      input.focus();
+    if (c.contains("vb-error")) {
+      inCall = false; stopLoop(); setState("error"); say(TEXT.error);
+      chatBtn.classList.add("nudge");
       return;
     }
-    if (!recognition) {
-      recognition = new SR();
-      recognition.lang = "en-IN";
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-      recognition.onresult = function (e) {
-        var res = e.results[e.results.length - 1];
-        var said = res[0].transcript;
-        if (res.isFinal) { listening = false; ask(said); }
-        else statusEl.textContent = "“" + said + "”";
-      };
-      recognition.onerror = function (e) {
-        listening = false;
-        setState("idle");
-        statusEl.textContent = e.error === "not-allowed"
-          ? "Allow the microphone to talk, or type below."
-          : "I didn't catch that. Tap and try again, or type below.";
-      };
-      recognition.onend = function () {
-        if (listening) { listening = false; setState("idle"); }
-      };
+    if (c.contains("vb-loading")) { setState("connecting"); say(TEXT.connecting); return; }
+    if (c.contains("vb-active")) {
+      if (!inCall) { inCall = true; setState("connecting"); say(TEXT.ringing); startLoop(); }
+      return;
     }
-    try {
-      recognition.start();
-      listening = true;
-      setState("listening");
-    } catch (err) { /* already started */ }
+    // back to idle
+    stopLoop();
+    if (inCall) {
+      inCall = false; setState("idle"); say(TEXT.ended);
+      clearTimeout(endedTimer);
+      endedTimer = setTimeout(function () { if (state() === "idle") say(TEXT.idle); }, 6000);
+    } else if (state() === "error") {
+      setState("idle"); // keep the error message on screen until the next tap
+    } else {
+      setState("idle");
+      if (statusEl.textContent === TEXT.loading) say(TEXT.idle);
+    }
   }
 
-  function toggleTalk() {
-    if ("speechSynthesis" in window && speechSynthesis.speaking) { speechSynthesis.cancel(); setState("idle"); return; }
-    if (listening && recognition) { recognition.stop(); listening = false; setState("idle"); return; }
-    listen();
+  new MutationObserver(sync).observe(hit, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
+  window.addEventListener("pageshow", sync);
+
+  // Runs before the button's own click handler: unlock audio inside the tap (iPhones need this)
+  hit.addEventListener("click", function () {
+    ensureAudio();
+    chatBtn.classList.remove("nudge");
+    if (!document.getElementById("vb-call-btn")) {
+      setState("error");
+      say(window.isSecureContext === false ? TEXT.insecure : TEXT.unavailable);
+      chatBtn.classList.add("nudge");
+    }
+  }, true);
+
+  // If the voice script never arrives (blocked network, offline), say so instead of spinning forever
+  setTimeout(function () {
+    if (!document.getElementById("vb-call-btn")) {
+      setState("error"); say(TEXT.unavailable); chatBtn.classList.add("nudge");
+    }
+  }, 12000);
+
+  /* ---------- open the chat widget ---------- */
+  function findLauncher() {
+    var w = window.__assistableWidget;
+    var root = w && w.shadow;
+    if (!root) return null;
+    var buttons = root.querySelectorAll("button");
+    for (var i = 0; i < buttons.length; i++) {
+      var label = (buttons[i].getAttribute("aria-label") || "").toLowerCase();
+      if (/open (the )?chat|chat with|open messenger|open widget|launcher/.test(label)) return buttons[i];
+    }
+    return null;
   }
-  orb.addEventListener("click", toggleTalk);
-  $("mic").addEventListener("click", toggleTalk);
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var q = input.value;
-    input.value = "";
-    ask(q);
+  chatBtn.addEventListener("click", function () {
+    var launcher = findLauncher();
+    if (launcher) { launcher.click(); return; }
+    say(TEXT.noChat);
   });
-
-  soundBtn.addEventListener("click", function () {
-    soundOn = !soundOn;
-    soundBtn.setAttribute("aria-pressed", String(soundOn));
-    soundBtn.setAttribute("aria-label", soundOn ? "Turn voice replies off" : "Turn voice replies on");
-    soundBtn.classList.toggle("off", !soundOn);
-    if (!soundOn && "speechSynthesis" in window) { speechSynthesis.cancel(); setState("idle"); }
-  });
-
-  /* ---------- start ---------- */
-  addMsg("ai", K.greeting);
-  document.body.classList.remove("chatting");   // keep the big orb until the visitor speaks
-  setChips(K.starters);
-  setState("idle");
 })();
